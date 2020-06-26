@@ -1,6 +1,7 @@
 const mysql = require("mysql");
 require("dotenv").config();
 const bcrypt = require("bcrypt");
+const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
 
 const pool = mysql.createPool({
@@ -30,22 +31,35 @@ staffsharedb.sheets.all = () => {
 };
 
 staffsharedb.sheets.addSheet = (sheet) => {
+    let sheetId = uuidv4();
+
+    // saving file
+    let file = sheet.dataPath;
+    // remove header
+    file = file.split(";base64,").pop();
+    const publicDir = __dirname + "\\..\\..\\public\\";
+    const filePath = `${publicDir}${sheetId}.pdf`;
+    fs.writeFile(filePath, file, { encoding: "base64" }, (err) => {
+        console.log("File created");
+    });
+
     return new Promise((resolve, reject) => {
         pool.query(
             `INSERT INTO sheet VALUES (?,?,?,?,?,?,?,?,?,?)`,
             [
-                sheet.id,
+                sheetId,
                 sheet.title,
                 sheet.subtitle,
                 sheet.composer,
                 sheet.genre,
                 sheet.keySignature,
-                sheet.dataPath,
+                filePath,
                 sheet.createdAt,
                 sheet.updateAt,
                 sheet.uploadedBy,
             ],
-            (result, err) => {
+            (err, result) => {
+                console.log("query result", result);
                 if (err) return reject(err);
                 return resolve(result);
             }
