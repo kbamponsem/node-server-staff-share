@@ -1,17 +1,11 @@
-const mysql = require("mysql");
+const pg = require("pg");
 require("dotenv").config();
 const bcrypt = require("bcrypt");
 const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
 
-const pool = mysql.createPool({
-    connectionLimit: 10,
-    password: process.env.PASSWORD,
-    user: process.env.USER,
-    database: "staff-share",
-    host: "localhost",
-    port: "3306",
-    multipleStatements: true,
+const pool = pg.Pool({
+    connectionString: process.env.DATABASE_URI,
 });
 
 let staffsharedb = {
