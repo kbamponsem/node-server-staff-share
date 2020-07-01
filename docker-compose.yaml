@@ -1,0 +1,45 @@
+version: "3.1"
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: ./nginx/Dockerfile
+    container_name: nginx    
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+        - nginx-letsencrypt:/etc/letsencrypt
+    links:
+      - main-server
+
+  mysql:
+    env_file: 
+      - .env
+    image: mysql:5.7
+    container_name: mysql
+    volumes:
+      - /var/lib/mysql
+    restart: always
+    ports:
+      - "3306:3306"
+
+  main-server:
+    build: 
+      context: .
+      dockerfile: main.dockerfile
+    container_name: main-server
+    command: npm start 
+    restart: always
+    volumes:
+      - ./:/usr/src/app/
+      - ./node_modules:/usr/src/app/node_modules
+    links:
+      - mysql
+    ports:
+      - 3050:3050
+    env_file: .env
+    
+volumes:
+  nginx-letsencrypt:
