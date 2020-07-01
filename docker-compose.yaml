@@ -34,7 +34,6 @@ services:
     restart: always
     volumes:
       - ./:/usr/src/app/
-      - ./node_modules:/usr/src/app/node_modules
     links:
       - mysql
     ports:
