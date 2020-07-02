@@ -35,7 +35,7 @@ staffsharedb.sheets.addSheet = (sheet) => {
     let file = sheet.dataPath;
     // remove header
     file = file.split(";base64,").pop();
-    const publicDir = __dirname + "\\..\\..\\public\\";
+    const publicDir = __dirname + "/../../public/";
     const filePath = `${publicDir}${sheetId}.pdf`;
     fs.writeFile(filePath, file, { encoding: "base64" }, (err) => {
         console.log("File created");
