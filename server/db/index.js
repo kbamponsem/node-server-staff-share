@@ -22,7 +22,7 @@ staffsharedb.sheets.all = () => {
     return new Promise((resolve, reject) => {
         pool.query(`SELECT * FROM sheet`, (err, results) => {
             if (err) {
-                return reject(err);
+                return reject({ error: err.code });
             }
             return resolve(results);
         });
@@ -62,8 +62,7 @@ staffsharedb.sheets.addSheet = (sheet) => {
                 sheet.uploadedBy,
             ],
             (err, result) => {
-                console.log("query result", result);
-                if (err) return reject(err);
+                if (err) return reject({ error: err.code });
                 return resolve(result);
             }
         );
@@ -86,7 +85,7 @@ staffsharedb.users.register = (user) => {
                 ],
                 (err, result) => {
                     if (err) {
-                        return reject(err);
+                        return reject({ error: err.code });
                     }
                     return resolve(result);
                 }
@@ -102,7 +101,7 @@ staffsharedb.users.login = ({ username, password }) => {
             [username, username],
             (err, result) => {
                 if (err) {
-                    return reject(err);
+                    return reject({ error: err.code });
                 }
                 if (result.length > 0) {
                     if (bcrypt.compareSync(password, result[0].password)) {

@@ -44,8 +44,7 @@ router.post("/register", async (req, res) => {
             message: "User created successfully",
         });
     } catch (e) {
-        console.log(e);
-        res.status(500).send({ message: "Error occurred" });
+        res.status(203).send(e);
     }
 });
 
