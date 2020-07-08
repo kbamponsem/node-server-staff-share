@@ -69,6 +69,62 @@ staffsharedb.sheets.addSheet = (sheet) => {
     });
 };
 
+staffsharedb.sheets.removeSheet = (sheetId) => {
+    return new Promise((resolve, reject) => {
+        let publicDir;
+        if (os.platform() === "win32")
+            publicDir = __dirname + "\\..\\..\\public\\";
+        publicDir = __dirname + "/../../public/";
+        const filePath = `${publicDir}${sheetId}.pdf`;
+
+        // delete file from public folder
+        if (os.platform() === "win32") {
+        } else
+            fs.rmdir(filePath, (err) => {
+                console.log(err);
+            });
+
+        pool.query(`DELETE FROM sheet WHERE id=?`, sheetId, (err, result) => {
+            if (err) return reject({ error: err.code });
+            return resolve(result);
+        });
+    });
+};
+
+staffsharedb.sheets.updateSheet = (sheetId, sheet) => {
+    let publicDir;
+    if (os.platform() === "win32") publicDir = __dirname + "\\..\\..\\public\\";
+    publicDir = __dirname + "/../../public/";
+    const filePath = `${publicDir}${sheetId}.pdf`;
+
+    let file = sheet.dataPath;
+    // remove header
+    file = file.split(";base64,").pop();
+    fs.writeFile(filePath, file, { encoding: "base64" }, (err) => {
+        if (err) throw err;
+        console.log("file updated");
+    });
+    return new Promise((resolve, reject) => {
+        pool.query(
+            `UPDATE sheet SET title=?,subtitle=?,genre=?,keySignature=?, data_path=?, updated_at=?, uploaded_by=? WHERE id=?`,
+            [
+                sheet.title,
+                sheet.subtitle,
+                sheet.genre,
+                sheet.keySignature,
+                `${sheetId}.pdf`,
+                sheet.updateAt,
+                sheet.uploadedBy,
+                sheetId,
+            ],
+            (err, result) => {
+                if (err) return reject(err);
+                return resolve(result);
+            }
+        );
+    });
+};
+
 staffsharedb.users.register = (user) => {
     return new Promise((resolve, reject) => {
         let userId = uuidv4();

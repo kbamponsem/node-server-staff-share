@@ -36,6 +36,30 @@ router.post("/add-sheet", async (req, res) => {
     }
 });
 
+router.delete("/delete-sheet/:sheetId", async (req, res) => {
+    try {
+        let sheetId = req.params["sheetId"];
+        console.log(sheetId);
+        const results = await db.sheets.removeSheet(sheetId);
+        res.status(200).send({ message: "Sheet music deleted successfully" });
+    } catch (e) {
+        console.log(e);
+        res.status(500).send({ message: "Error occured" });
+    }
+});
+
+router.put("/update-sheet/:sheetId", async (req, res) => {
+    console.log("here");
+    try {
+        let sheetId = req.params["sheetId"];
+        let sheet = req.body;
+        const results = await db.sheets.updateSheet(sheetId, sheet);
+        res.status(200).send({ message: "Sheet music updated successfully" });
+    } catch (e) {
+        console.log(e);
+    }
+});
+
 router.post("/register", async (req, res) => {
     let data = req.body;
     try {
