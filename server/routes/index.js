@@ -49,7 +49,6 @@ router.delete("/delete-sheet/:sheetId", async (req, res) => {
 });
 
 router.put("/update-sheet/:sheetId", async (req, res) => {
-    console.log("here");
     try {
         let sheetId = req.params["sheetId"];
         let sheet = req.body;
