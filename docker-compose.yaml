@@ -17,7 +17,7 @@ services:
     mysql:
         env_file:
             - .env
-        image: mysql:5.7.30
+        image: mysql:8.0.20
         container_name: mysql
         volumes:
             - /var/lib/mysql
