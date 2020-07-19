@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const db = require("../db");
 const jwt = require("jsonwebtoken");
+const { compare } = require("bcrypt");
 const router = express.Router();
 
 const verifyToken = (req, res, next) => {
@@ -17,8 +18,20 @@ const verifyToken = (req, res, next) => {
 };
 router.get("/sheets", verifyToken, async (req, res, next) => {
     try {
+        let newArr;
         let results = await db.sheets.all();
-        res.json(results);
+
+        newArr = await Promise.all(
+            results.map(async (sheet) => {
+                const audio = await db.audios.getAudios(sheet.id);
+                return {
+                    ...sheet,
+                    audio,
+                };
+            })
+        );
+
+        res.json(newArr);
     } catch (e) {
         console.log(e);
         res.sendStatus(500);
@@ -27,8 +40,13 @@ router.get("/sheets", verifyToken, async (req, res, next) => {
 
 router.post("/add-sheet", async (req, res) => {
     try {
-        let data = req.body;
-        const results = await db.sheets.addSheet(data);
+        let { sheet, audios } = req.body;
+        const { sheetId } = await db.sheets.addSheet(sheet);
+
+        // insert audio files for this sheet
+        let result;
+        if (audios.length > 0)
+            result = await db.audios.addAudio(audios, sheetId);
         res.status(200).send({ message: "Sheet added successfully" });
     } catch (e) {
         console.log(e);

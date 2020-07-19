@@ -16,6 +16,7 @@ const pool = mysql.createPool({
 let staffsharedb = {
     sheets: {},
     users: {},
+    audios: {},
 };
 
 staffsharedb.sheets.all = () => {
@@ -38,8 +39,9 @@ staffsharedb.sheets.addSheet = (sheet) => {
     file = file.split(";base64,").pop();
 
     let publicDir;
-    if (os.platform() === "win32") publicDir = __dirname + "\\..\\..\\public\\";
-    publicDir = __dirname + "/../../public/";
+    if (os.platform() === "win32")
+        publicDir = __dirname + "\\..\\..\\public\\pdfs\\";
+    publicDir = __dirname + "/../../public/pdfs/";
     const filePath = `${publicDir}${sheetId}.pdf`;
 
     fs.writeFile(filePath, file, { encoding: "base64" }, (err) => {
@@ -63,12 +65,59 @@ staffsharedb.sheets.addSheet = (sheet) => {
             ],
             (err, result) => {
                 if (err) return reject({ error: err.code });
-                return resolve(result);
+                return resolve({ result, sheetId });
             }
         );
     });
 };
 
+staffsharedb.audios.addAudio = (audio, sheetId) => {
+    return new Promise((resolve, reject) => {
+        for (var i = 0; i < audio.length; i++) {
+            let audioId = uuidv4();
+
+            let file = audio[i].dataPath;
+            file = file.split(";base64,").pop();
+            let publicDir;
+            if (os.platform() === "win32")
+                publicDir = __dirname + "\\..\\..\\public\\audios\\";
+            publicDir = __dirname + "/../../public/audios/";
+            const filePath = `${publicDir}${audioId}.mp3`;
+
+            fs.writeFile(filePath, file, { encoding: "base64" }, (err) => {
+                console.log("Audio file created");
+            });
+
+            pool.query(
+                `INSERT INTO audio VALUES (?,?,?,?,?)`,
+                [
+                    audioId,
+                    audio[i].partName,
+                    `${audioId}.mp3`,
+                    audio[i].uploadedBy,
+                    sheetId,
+                ],
+                (err, result) => {
+                    if (err) return reject({ error: err.code });
+                    return resolve(result);
+                }
+            );
+        }
+    });
+};
+
+staffsharedb.audios.getAudios = (sheetId) => {
+    return new Promise((resolve, reject) => {
+        pool.query(
+            `SELECT * FROM audio WHERE sheet_id=?`,
+            [sheetId],
+            (err, res) => {
+                if (err) return reject({ error: err });
+                return resolve(res);
+            }
+        );
+    });
+};
 staffsharedb.sheets.removeSheet = (sheetId) => {
     return new Promise((resolve, reject) => {
         let publicDir;
