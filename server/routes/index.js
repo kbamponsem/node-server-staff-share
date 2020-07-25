@@ -51,7 +51,18 @@ router.post("/add-sheet", async (req, res) => {
         res.status(200).send({ message: "Sheet added successfully" });
     } catch (e) {
         console.log(e);
-        res.status(500).send({ message: "Error occured" });
+        res.status(500).send({ message: "Error occurred" });
+    }
+});
+
+router.post("/add-audios", async (req, res) => {
+    try {
+        const { id, audios } = req.body;
+        const result = await db.audios.addAudio(audios, id);
+        res.status(200).send({ message: "Audios added successfully" });
+    } catch (e) {
+        console.log(e);
+        res.status(500).send({ message: "Error occurred" });
     }
 });
 
