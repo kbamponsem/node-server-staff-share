@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const fs = require("fs");
 const os = require("os");
 const { v4: uuidv4 } = require("uuid");
+const { resolve } = require("path");
 
 const pool = mysql.createPool({
     database: process.env.MYSQL_DATABASE,
@@ -118,17 +119,72 @@ staffsharedb.audios.getAudios = (sheetId) => {
         );
     });
 };
+
+staffsharedb.audios.updateAudios = (sheetId, audios) => {
+    return new Promise((resolve, reject) => {
+        let publicDir, filePath, file;
+        if (os.platform() === "win32")
+            publicDir = __dirname + "\\..\\..\\public\\audios\\";
+        publicDir = __dirname + "/../../public/audios/";
+        if (audios.length === 0) return resolve({ message: "No audios" });
+        for (var i = 0; i < audios.length; i++) {
+            filePath = `${publicDir}${audios[i].id}.mp3`;
+
+            file = audios[i].dataPath; // base64 string
+            // remove header
+
+            if (audios[i].dataPath.indexOf("data") > -1) {
+                file = file.split(";base64,").pop();
+                fs.writeFile(filePath, file, { encoding: "base64" }, (err) => {
+                    if (err) throw err;
+                    console.log("Audio file updated");
+                });
+            }
+
+            pool.query(
+                `
+                UPDATE audio SET part_name=?,data_path=?,uploaded_by=? WHERE id=? AND sheet_id=?
+            `,
+                [
+                    audios[i].partName,
+                    `${audios[i].id}.mp3`,
+                    audios[i].uploadedBy,
+                    audios[i].id,
+                    sheetId,
+                ],
+                (err, res) => {
+                    if (err) return reject({ error: err });
+                    return resolve({ message: "Audio updated successfully" });
+                }
+            );
+        }
+    });
+};
+
+staffsharedb.audios.removeAudio = (audioIds) => {
+    return new Promise((resolve, reject) => {
+        for (var i = 0; i < audioIds.length; i++) {
+            pool.query(
+                `DELETE FROM audio WHERE id=?`,
+                audioIds[i],
+                (err, res) => {
+                    if (err) return reject(err);
+                    return resolve(res);
+                }
+            );
+        }
+    });
+};
 staffsharedb.sheets.removeSheet = (sheetId) => {
     return new Promise((resolve, reject) => {
         let publicDir;
         if (os.platform() === "win32")
-            publicDir = __dirname + "\\..\\..\\public\\";
-        publicDir = __dirname + "/../../public/";
+            publicDir = __dirname + "\\..\\..\\public\\pdfs\\";
+        publicDir = __dirname + "/../../public/pdfs/";
         const filePath = `${publicDir}${sheetId}.pdf`;
 
         // delete file from public folder
-        if (os.platform() === "win32") {
-        } else
+        if (fs.existsSync(filePath))
             fs.rmdir(filePath, (err) => {
                 console.log(err);
             });
@@ -142,11 +198,12 @@ staffsharedb.sheets.removeSheet = (sheetId) => {
 
 staffsharedb.sheets.updateSheet = (sheetId, sheet) => {
     let publicDir;
-    if (os.platform() === "win32") publicDir = __dirname + "\\..\\..\\public\\";
-    publicDir = __dirname + "/../../public/";
+    if (os.platform() === "win32")
+        publicDir = __dirname + "\\..\\..\\public\\pdfs\\";
+    publicDir = __dirname + "/../../public/pdfs/";
     const filePath = `${publicDir}${sheetId}.pdf`;
 
-    let file = sheet.dataPath;
+    let file = sheet.dataPath; // base64 string
     // remove header
     file = file.split(";base64,").pop();
     fs.writeFile(filePath, file, { encoding: "base64" }, (err) => {

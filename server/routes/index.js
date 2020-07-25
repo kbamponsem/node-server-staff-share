@@ -3,6 +3,7 @@ const express = require("express");
 const db = require("../db");
 const jwt = require("jsonwebtoken");
 const { compare } = require("bcrypt");
+const { audios } = require("../db");
 const router = express.Router();
 
 const verifyToken = (req, res, next) => {
@@ -57,9 +58,20 @@ router.post("/add-sheet", async (req, res) => {
 router.delete("/delete-sheet/:sheetId", async (req, res) => {
     try {
         let sheetId = req.params["sheetId"];
-        console.log(sheetId);
         const results = await db.sheets.removeSheet(sheetId);
         res.status(200).send({ message: "Sheet music deleted successfully" });
+    } catch (e) {
+        console.log(e);
+        res.status(500).send({ message: "Error occured" });
+    }
+});
+
+router.post("/delete-audio", async (req, res) => {
+    try {
+        let audioIds = req.body;
+        console.log("delete-audio", audioIds);
+        const result = await db.audios.removeAudio(audioIds);
+        res.status(200).send({ message: "Audio deleted successfully" });
     } catch (e) {
         console.log(e);
         res.status(500).send({ message: "Error occured" });
@@ -69,8 +81,9 @@ router.delete("/delete-sheet/:sheetId", async (req, res) => {
 router.put("/update-sheet/:sheetId", async (req, res) => {
     try {
         let sheetId = req.params["sheetId"];
-        let sheet = req.body;
+        let { sheet, audios } = req.body;
         const results = await db.sheets.updateSheet(sheetId, sheet);
+        let result = await db.audios.updateAudios(sheetId, audios);
         res.status(200).send({ message: "Sheet music updated successfully" });
     } catch (e) {
         console.log(e);
