@@ -1,45 +1,26 @@
 version: "3.1"
 services:
-    nginx:
-        build:
-            context: .
-            dockerfile: ./nginx/Dockerfile
-        container_name: nginx
-        restart: always
-        ports:
-            - "80:80"
-            - "443:443"
-        volumes:
-            - nginx-letsencrypt:/etc/letsencrypt
-        links:
-            - main-server
+  staff-share:
+    build:
+      context: .
+      dockerfile: main.dockerfile
+    container_name: staff-share
+    command: npm start
+    restart: always
+    volumes:
+      - ./:/usr/src/app/
+    ports:
+      - 3050:3050
+    env_file: .env
+    environment:
+      # NGINX-PROXY ENVIRONMENT VARIABLES
+      - VIRTUAL_HOST=server.staffshare.co
+      - VIRTUAL_PORT=3050
+      - DISABLE_ACCESS_LOGS=true
+      - LETSENCRYPT_HOST=server.staffshare.co
+      - LETSENCRYPT_EMAIL=kbamponsem@yahoo.com
 
-    mysql:
-        env_file:
-            - .env
-        image: mysql:8.0.20
-        container_name: mysql
-        volumes:
-            - /var/lib/mysql
-        restart: always
-        ports:
-            - "3306:3306"
-
-    main-server:
-        build:
-            context: .
-            dockerfile: main.dockerfile
-        container_name: main-server
-        command: npm start
-        restart: always
-        volumes:
-            - ./:/usr/src/app/
-            - ./node_modules:/usr/src/app/node_modules
-        links:
-            - mysql
-        ports:
-            - 3050:3050
-        env_file: .env
-
-volumes:
-    nginx-letsencrypt:
+networks:
+  default:
+    external:
+      name: nginx-proxy
