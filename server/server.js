@@ -13,7 +13,7 @@ app.use(
 );
 app.use(
     express.urlencoded({
-        limit: "50mb",
+        limit: "100mb",
         parameterLimit: 100000,
         extended: true,
     })
