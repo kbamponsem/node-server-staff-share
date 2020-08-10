@@ -21,4 +21,6 @@ app.use(
 
 app.use("/staffshare/api/", apiRouter);
 
-app.listen(process.env.PORT || "3000", () => console.log('server started', 'PORT', process.env.PORT));
+app.listen(process.env.PORT || "3000", () =>
+    console.log("server started", "PORT", process.env.PORT)
+);
