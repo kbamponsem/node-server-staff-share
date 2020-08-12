@@ -22,8 +22,19 @@ router.get("/sheets", verifyToken, async (req, res, next) => {
         let newArr;
         let results = await db.sheets.all();
 
+        //get likes
         newArr = await Promise.all(
             results.map(async (sheet) => {
+                const likes = await db.likes.getSheetLikes(sheet.id);
+                return {
+                    ...sheet,
+                    likes,
+                };
+            })
+        );
+        // get audios
+        newArr = await Promise.all(
+            newArr.map(async (sheet) => {
                 const audio = await db.audios.getAudios(sheet.id);
                 return {
                     ...sheet,
@@ -39,6 +50,67 @@ router.get("/sheets", verifyToken, async (req, res, next) => {
     }
 });
 
+router.post("/user-favorites", async (req, res) => {
+    try {
+        const { userId } = req.body;
+        let results = await db.favorites.getUserFavorites(userId);
+        res.json(results);
+    } catch (e) {
+        console.log(e);
+        res.sendStatus(500);
+    }
+});
+router.post("/user-likes", async (req, res) => {
+    try {
+        const { userId } = req.body;
+        let results = await db.likes.getUserLikes(userId);
+        res.json(results);
+    } catch (e) {
+        console.log(e);
+        res.sendStatus(500);
+    }
+});
+router.post("/like-sheet", async (req, res) => {
+    try {
+        let { sheetId, userId } = req.body;
+        await db.likes.addSheetLikes(sheetId, userId);
+        res.status(200);
+    } catch (e) {
+        console.log(e);
+        res.status(500);
+    }
+});
+router.post("/add-fav-sheet", async (req, res) => {
+    try {
+        let { sheetId, userId } = req.body;
+        await db.favorites.addSheetToFav(sheetId, userId);
+        res.status(200);
+    } catch (e) {
+        console.log(e);
+        res.status(500);
+    }
+});
+router.post("/remove-fav-sheet", async (req, res) => {
+    try {
+        let { sheetId, userId } = req.body;
+        await db.favorites.removeSheetFromFav(sheetId, userId);
+        res.status(200);
+    } catch (e) {
+        console.log(e);
+        res.status(500);
+    }
+});
+
+router.post("/remove-like-sheet", async (req, res) => {
+    try {
+        let { sheetId, userId } = req.body;
+        await db.likes.removeSheetLikes(sheetId, userId);
+        res.status(200);
+    } catch (e) {
+        console.log(e);
+        res.status(500);
+    }
+});
 router.post("/add-sheet", async (req, res) => {
     try {
         let { sheet, audios } = req.body;
@@ -118,7 +190,7 @@ router.post("/login", async (req, res) => {
         const user = req.body;
         const results = await db.users.login(user);
 
-        const { loggedIn, name } = results;
+        const { loggedIn, name, userId } = results;
         let accessToken;
         if (loggedIn) {
             accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
@@ -126,6 +198,7 @@ router.post("/login", async (req, res) => {
             res.status(200).send({
                 accessToken,
                 name,
+                userId,
             });
         } else {
             res.status(201).send({ message: "User not found" });
