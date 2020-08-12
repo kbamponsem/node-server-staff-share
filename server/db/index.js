@@ -4,7 +4,6 @@ const bcrypt = require("bcrypt");
 const fs = require("fs");
 const os = require("os");
 const { v4: uuidv4 } = require("uuid");
-const { resolve } = require("path");
 
 const pool = mysql.createPool({
     database: process.env.MYSQL_DATABASE,
@@ -18,6 +17,101 @@ let staffsharedb = {
     sheets: {},
     users: {},
     audios: {},
+    likes: {},
+    favorites: {},
+};
+
+staffsharedb.likes.getSheetLikes = (sheetId) => {
+    return new Promise((resolve, reject) => {
+        pool.query(
+            `SELECT * from likes WHERE sheet_id=?`,
+            [sheetId],
+            (err, res) => {
+                if (err) return reject({ error: err.code });
+                return resolve(res);
+            }
+        );
+    });
+};
+
+staffsharedb.likes.addSheetLikes = (sheetId, userId) => {
+    const id = uuidv4();
+    return new Promise((resolve, reject) => {
+        pool.query(
+            `INSERT INTO likes VALUES(?,?,?)`,
+            [id, sheetId, userId],
+            (err, res) => {
+                if (err) return reject({ err: err.code });
+                return resolve(res);
+            }
+        );
+    });
+};
+
+staffsharedb.favorites.addSheetToFav = (sheetId, userId) => {
+    const id = uuidv4();
+    return new Promise((resolve, reject) => {
+        pool.query(
+            `INSERT INTO favorites VALUES(?,?,?)`,
+            [id, sheetId, userId],
+            (err, res) => {
+                if (err) return reject({ error: err.code });
+                return resolve(res);
+            }
+        );
+    });
+};
+
+staffsharedb.favorites.getUserFavorites = (userId) => {
+    return new Promise((resolve, reject) => {
+        pool.query(
+            `SELECT sheet_id from favorites WHERE user_id=?`,
+            [userId],
+            (err, res) => {
+                if (err) return reject({ error: err.code });
+                return resolve(res);
+            }
+        );
+    });
+};
+staffsharedb.likes.getUserLikes = (userId) => {
+    return new Promise((resolve, reject) => {
+        pool.query(
+            `SELECT sheet_id from likes WHERE user_id=?`,
+            [userId],
+            (err, res) => {
+                if (err) return reject({ error: err.code });
+                return resolve(res);
+            }
+        );
+    });
+};
+staffsharedb.favorites.removeSheetFromFav = (sheetId, userId) => {
+    const id = uuidv4();
+    return new Promise((resolve, reject) => {
+        pool.query(
+            `DELETE FROM favorites WHERE sheet_id=? AND user_id=?`,
+            [sheetId, userId],
+            (err, res) => {
+                if (err) return reject({ error: err.code });
+                return resolve(res);
+            }
+        );
+    });
+};
+
+staffsharedb.likes.removeSheetLikes = (sheetId, userId) => {
+    const id = uuidv4();
+    return new Promise((resolve, reject) => {
+        pool.query(
+            `DELETE FROM likes WHERE sheet_id=? AND user_id=?`,
+            [sheetId, userId],
+            (err, res) => {
+                if (err) return reject({ error: err.code });
+                return resolve(res);
+            }
+        );
+    });
 };
 
 staffsharedb.sheets.all = () => {
@@ -259,7 +353,7 @@ staffsharedb.users.register = (user) => {
 staffsharedb.users.login = ({ username, password }) => {
     return new Promise((resolve, reject) => {
         pool.query(
-            `SELECT name,password FROM user WHERE username=? OR email=?`,
+            `SELECT id,name,password FROM user WHERE username=? OR email=?`,
             [username, username],
             (err, result) => {
                 if (err) {
@@ -270,10 +364,11 @@ staffsharedb.users.login = ({ username, password }) => {
                         return resolve({
                             loggedIn: true,
                             name: result[0].name,
+                            userId: result[0].id,
                         });
                     }
                 }
-                return resolve({ loggedIn: false, name: "" });
+                return resolve({ loggedIn: false, name: "", userId: "" });
             }
         );
     });
