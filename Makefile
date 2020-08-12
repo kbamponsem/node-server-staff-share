@@ -19,7 +19,7 @@ stop:
 	docker-compose down
 
 sync:
-	rsync -av --exclude 'node_modules' '.git' . root@202.182.118.57:/opt/server/staff-share 
+	rsync -av --exclude 'node_modules' --exclude '.git' . root@202.182.118.57:/opt/server/staff-share 
 
 connect-db:
 	docker exec -it mysql mysql -u root -p staff-share
