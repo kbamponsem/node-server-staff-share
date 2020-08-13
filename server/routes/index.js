@@ -74,7 +74,7 @@ router.post("/like-sheet", async (req, res) => {
     try {
         let { sheetId, userId } = req.body;
         await db.likes.addSheetLikes(sheetId, userId);
-        res.status(200);
+        res.json({ message: "Sheet added to likes successfully" });
     } catch (e) {
         console.log(e);
         res.status(500);
@@ -84,7 +84,7 @@ router.post("/add-fav-sheet", async (req, res) => {
     try {
         let { sheetId, userId } = req.body;
         await db.favorites.addSheetToFav(sheetId, userId);
-        res.status(200);
+        res.json({ message: "Sheet added to favorites successfully" });
     } catch (e) {
         console.log(e);
         res.status(500);
@@ -94,7 +94,7 @@ router.post("/remove-fav-sheet", async (req, res) => {
     try {
         let { sheetId, userId } = req.body;
         await db.favorites.removeSheetFromFav(sheetId, userId);
-        res.status(200);
+        res.json({ message: "Sheet removed from favorites successfully" });
     } catch (e) {
         console.log(e);
         res.status(500);
@@ -105,7 +105,7 @@ router.post("/remove-like-sheet", async (req, res) => {
     try {
         let { sheetId, userId } = req.body;
         await db.likes.removeSheetLikes(sheetId, userId);
-        res.status(200);
+        res.json({ message: "Sheet removed from likes successfully" });
     } catch (e) {
         console.log(e);
         res.status(500);
