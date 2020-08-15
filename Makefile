@@ -1,4 +1,4 @@
-app=main-server
+app=staff-share
 
 logs:
 	docker  logs --tail 10 -f ${app}
@@ -19,14 +19,14 @@ stop:
 	docker-compose down
 
 sync:
-	rsync -av --exclude 'node_modules' --exclude 'public' --exclude '.git' . root@202.182.118.57:/opt/staff-share 
+	rsync -av --exclude 'node_modules' --exclude '.git' . root@202.182.118.57:/opt/server/staff-share 
 
 connect-db:
 	docker exec -it mysql mysql -u root -p staff-share
 
 build-main:
-	docker-compose build main-server
-	docker-compose up --no-deps -d main-server
+	docker-compose build staff-share
+	docker-compose up --no-deps -d staff-share
 
 deploy-main: 
 	make sync
