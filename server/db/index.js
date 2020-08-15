@@ -74,6 +74,33 @@ staffsharedb.favorites.getUserFavorites = (userId) => {
         );
     });
 };
+
+staffsharedb.sheets.getUserFavoriteSheets = (userId) => {
+    return new Promise((resolve, reject) => {
+        pool.query(
+            `select sheet.* from sheet JOIN favorites on favorites.sheet_id = sheet.id WHERE favorites.user_id=?`,
+            [userId],
+            (err, res) => {
+                if (err) return reject({ error: err.code });
+                return resolve(res);
+            }
+        );
+    });
+};
+
+staffsharedb.sheets.getUserUploads = (userName) => {
+    return new Promise((resolve, reject) => {
+        pool.query(
+            `select sheet.* from sheet JOIN user ON user.name=sheet.uploaded_by WHERE user.name=?`,
+            [userName],
+            (err, res) => {
+                if (err) return reject({ error: err.code });
+                return resolve(res);
+            }
+        );
+    });
+};
+
 staffsharedb.likes.getUserLikes = (userId) => {
     return new Promise((resolve, reject) => {
         pool.query(

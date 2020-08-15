@@ -60,6 +60,72 @@ router.post("/user-favorites", async (req, res) => {
         res.sendStatus(500);
     }
 });
+
+router.post("/user-favorite-sheets", async (req, res) => {
+    try {
+        const { userId } = req.body;
+        let newArr = [];
+        let result = await db.sheets.getUserFavoriteSheets(userId);
+
+        newArr = await Promise.all(
+            result.map(async (sheet) => {
+                const likes = await db.likes.getSheetLikes(sheet.id);
+                return {
+                    ...sheet,
+                    likes,
+                };
+            })
+        );
+        // get audios
+        newArr = await Promise.all(
+            newArr.map(async (sheet) => {
+                const audio = await db.audios.getAudios(sheet.id);
+                return {
+                    ...sheet,
+                    audio,
+                };
+            })
+        );
+        res.json(newArr);
+    } catch (e) {
+        console.log(e);
+        res.sendStatus(500);
+    }
+});
+
+router.post("/user-uploads", async (req, res) => {
+    try {
+        const { userName } = req.body;
+        console.log(userName);
+        let newArr = [];
+        let result = await db.sheets.getUserUploads(userName);
+
+        newArr = await Promise.all(
+            result.map(async (sheet) => {
+                const likes = await db.likes.getSheetLikes(sheet.id);
+                return {
+                    ...sheet,
+                    likes,
+                };
+            })
+        );
+        // get audios
+        newArr = await Promise.all(
+            newArr.map(async (sheet) => {
+                const audio = await db.audios.getAudios(sheet.id);
+                return {
+                    ...sheet,
+                    audio,
+                };
+            })
+        );
+        console.log(newArr);
+        res.json(newArr);
+    } catch (e) {
+        console.log(e);
+        res.sendStatus(500);
+    }
+});
 router.post("/user-likes", async (req, res) => {
     try {
         const { userId } = req.body;

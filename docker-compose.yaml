@@ -1,26 +1,26 @@
 version: "3.1"
 services:
-  staff-share:
-    build:
-      context: .
-      dockerfile: main.dockerfile
-    container_name: staff-share
-    command: npm start
-    restart: always
-    volumes:
-      - ./:/usr/src/app/
-    ports:
-      - 3050:3050
-    env_file: .env
-    environment:
-      # NGINX-PROXY ENVIRONMENT VARIABLES
-      - VIRTUAL_HOST=server.staffshare.co
-      - VIRTUAL_PORT=3050
-      - DISABLE_ACCESS_LOGS=true
-      - LETSENCRYPT_HOST=server.staffshare.co
-      - LETSENCRYPT_EMAIL=kbamponsem@yahoo.com
+    staff-share:
+        build:
+            context: .
+            dockerfile: main.dockerfile
+        container_name: staff-share
+        command: npm start
+        restart: always
+        volumes:
+            - ./:/usr/src/app/
+        ports:
+            - 3050:3050
+        env_file: .env
+        environment:
+            # NGINX-PROXY ENVIRONMENT VARIABLES
+            - VIRTUAL_HOST=server.staffshare.co
+            - VIRTUAL_PORT=3050
+            - DISABLE_ACCESS_LOGS=true
+            - LETSENCRYPT_HOST=server.staffshare.co
+            - LETSENCRYPT_EMAIL=kbamponsem@yahoo.com
 
 networks:
-  default:
-    external:
-      name: nginx-proxy
+    default:
+        external:
+            name: nginx-proxy
