@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const fs = require("fs");
 const os = require("os");
 const { v4: uuidv4 } = require("uuid");
+const { resolve } = require("path");
 
 const pool = mysql.createPool({
     database: process.env.MYSQL_DATABASE,
@@ -149,6 +150,32 @@ staffsharedb.sheets.all = () => {
             }
             return resolve(results);
         });
+    });
+};
+
+staffsharedb.sheets.userSheets = (userName) => {
+    return new Promise((resolve, reject) => {
+        pool.query(
+            `SELECT * FROM sheet WHERE uploaded_by=?`,
+            [userName],
+            (err, res) => {
+                if (err) return reject(err);
+                return resolve(res);
+            }
+        );
+    });
+};
+staffsharedb.sheets.search = (key) => {
+    key = `%${key}%`;
+    return new Promise((resolve, reject) => {
+        pool.query(
+            `SELECT * FROM sheet WHERE title LIKE ? or composer LIKE ? or genre LIKE ? or keySignature LIKE ? or uploaded_by LIKE ?`,
+            [key, key, key, key, key],
+            (err, res) => {
+                if (err) return reject(err);
+                return resolve(res);
+            }
+        );
     });
 };
 

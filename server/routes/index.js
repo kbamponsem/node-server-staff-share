@@ -4,6 +4,8 @@ const db = require("../db");
 const jwt = require("jsonwebtoken");
 const { compare } = require("bcrypt");
 const { audios } = require("../db");
+const nodemailer = require("nodemailer");
+const emailExistence = require("email-existence");
 const router = express.Router();
 
 const verifyToken = (req, res, next) => {
@@ -17,32 +19,37 @@ const verifyToken = (req, res, next) => {
         next();
     });
 };
+
+const fetchLikes = (data) => {
+    return Promise.all(
+        data.map(async (sheet) => {
+            const likes = await db.likes.getSheetLikes(sheet.id);
+            return {
+                ...sheet,
+                likes,
+            };
+        })
+    );
+};
+
+const fetchAudios = (data) => {
+    return Promise.all(
+        data.map(async (sheet) => {
+            const audio = await db.audios.getAudios(sheet.id);
+            return {
+                ...sheet,
+                audio,
+            };
+        })
+    );
+};
 router.get("/sheets", verifyToken, async (req, res, next) => {
     try {
         let newArr;
         let results = await db.sheets.all();
 
-        //get likes
-        newArr = await Promise.all(
-            results.map(async (sheet) => {
-                const likes = await db.likes.getSheetLikes(sheet.id);
-                return {
-                    ...sheet,
-                    likes,
-                };
-            })
-        );
-        // get audios
-        newArr = await Promise.all(
-            newArr.map(async (sheet) => {
-                const audio = await db.audios.getAudios(sheet.id);
-                return {
-                    ...sheet,
-                    audio,
-                };
-            })
-        );
-
+        newArr = await fetchLikes(results);
+        newArr = await fetchAudios(newArr);
         res.json(newArr);
     } catch (e) {
         console.log(e);
@@ -50,6 +57,35 @@ router.get("/sheets", verifyToken, async (req, res, next) => {
     }
 });
 
+router.post("/user-sheets", async (req, res) => {
+    let { userName } = req.body;
+    try {
+        let newArr;
+        let results = await db.sheets.userSheets(userName);
+
+        newArr = await fetchLikes(results);
+        newArr = await fetchAudios(newArr);
+        res.json(newArr);
+    } catch (e) {
+        console.error(e);
+        res.sendStatus(500);
+    }
+});
+
+router.post("/search", async (req, res) => {
+    try {
+        let { key } = req.body;
+        const results = await db.sheets.search(key);
+
+        newArr = await fetchLikes(results);
+        newArr = await fetchAudios(newArr);
+
+        res.json(newArr);
+    } catch (e) {
+        console.log(e);
+        res.sendStatus(500);
+    }
+});
 router.post("/user-favorites", async (req, res) => {
     try {
         const { userId } = req.body;
@@ -65,27 +101,10 @@ router.post("/user-favorite-sheets", async (req, res) => {
     try {
         const { userId } = req.body;
         let newArr = [];
-        let result = await db.sheets.getUserFavoriteSheets(userId);
+        let results = await db.sheets.getUserFavoriteSheets(userId);
 
-        newArr = await Promise.all(
-            result.map(async (sheet) => {
-                const likes = await db.likes.getSheetLikes(sheet.id);
-                return {
-                    ...sheet,
-                    likes,
-                };
-            })
-        );
-        // get audios
-        newArr = await Promise.all(
-            newArr.map(async (sheet) => {
-                const audio = await db.audios.getAudios(sheet.id);
-                return {
-                    ...sheet,
-                    audio,
-                };
-            })
-        );
+        newArr = await fetchLikes(results);
+        newArr = await fetchAudios(newArr);
         res.json(newArr);
     } catch (e) {
         console.log(e);
@@ -98,28 +117,10 @@ router.post("/user-uploads", async (req, res) => {
         const { userName } = req.body;
         console.log(userName);
         let newArr = [];
-        let result = await db.sheets.getUserUploads(userName);
+        let results = await db.sheets.getUserUploads(userName);
 
-        newArr = await Promise.all(
-            result.map(async (sheet) => {
-                const likes = await db.likes.getSheetLikes(sheet.id);
-                return {
-                    ...sheet,
-                    likes,
-                };
-            })
-        );
-        // get audios
-        newArr = await Promise.all(
-            newArr.map(async (sheet) => {
-                const audio = await db.audios.getAudios(sheet.id);
-                return {
-                    ...sheet,
-                    audio,
-                };
-            })
-        );
-        console.log(newArr);
+        newArr = await fetchLikes(results);
+        newArr = await fetchAudios(newArr);
         res.json(newArr);
     } catch (e) {
         console.log(e);
@@ -241,6 +242,7 @@ router.put("/update-sheet/:sheetId", async (req, res) => {
 
 router.post("/register", async (req, res) => {
     let data = req.body;
+    console.log(data.email);
     try {
         let results = await db.users.register(data);
         res.status(200).send({
