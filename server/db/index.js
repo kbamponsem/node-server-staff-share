@@ -333,7 +333,7 @@ staffsharedb.sheets.removeSheet = (sheetId) => {
 
         // delete file from public folder
         if (fs.existsSync(filePath))
-            fs.rmdir(filePath, (err) => {
+            fs.unlink(filePath, (err) => {
                 console.log(err);
             });
 
