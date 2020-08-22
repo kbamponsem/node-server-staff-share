@@ -115,7 +115,6 @@ router.post("/user-favorite-sheets", async (req, res) => {
 router.post("/user-uploads", async (req, res) => {
     try {
         const { userName } = req.body;
-        console.log(userName);
         let newArr = [];
         let results = await db.sheets.getUserUploads(userName);
 
@@ -242,7 +241,6 @@ router.put("/update-sheet/:sheetId", async (req, res) => {
 
 router.post("/register", async (req, res) => {
     let data = req.body;
-    console.log(data.email);
     try {
         let results = await db.users.register(data);
         res.status(200).send({
