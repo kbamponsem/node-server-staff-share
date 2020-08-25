@@ -153,6 +153,15 @@ staffsharedb.sheets.all = () => {
     });
 };
 
+staffsharedb.sheets.getSheetWithId = (sheetId) => {
+    return new Promise((resolve, reject) => {
+        pool.query(`SELECT * FROM sheet WHERE id=?`, [sheetId], (err, res) => {
+            if (err) return reject(err);
+            return resolve(res);
+        });
+    });
+};
+
 staffsharedb.sheets.userSheets = (userName) => {
     return new Promise((resolve, reject) => {
         pool.query(
