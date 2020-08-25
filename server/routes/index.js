@@ -2,12 +2,9 @@ require("dotenv").config();
 const express = require("express");
 const db = require("../db");
 const jwt = require("jsonwebtoken");
-const { compare } = require("bcrypt");
-const { audios } = require("../db");
-const nodemailer = require("nodemailer");
-const emailExistence = require("email-existence");
-const router = express.Router();
 
+const router = express.Router();
+const main = require("./mailer");
 const verifyToken = (req, res, next) => {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
@@ -57,6 +54,20 @@ router.get("/sheets", verifyToken, async (req, res, next) => {
     }
 });
 
+router.post("/sheet-with-id", async (req, res) => {
+    let { sheetId } = req.body;
+    try {
+        let newArr;
+        let results = await db.sheets.getSheetWithId(sheetId);
+
+        newArr = await fetchLikes(results);
+        newArr = await fetchAudios(newArr);
+        res.json(newArr);
+    } catch (e) {
+        console.error(e);
+        res.sendStatus(500);
+    }
+});
 router.post("/user-sheets", async (req, res) => {
     let { userName } = req.body;
     try {
@@ -243,6 +254,7 @@ router.post("/register", async (req, res) => {
     let data = req.body;
     try {
         let results = await db.users.register(data);
+
         res.status(200).send({
             message: "User created successfully",
         });
