@@ -262,45 +262,45 @@ router.put("/update-sheet/:sheetId", async (req, res) => {
 
 router.get("/confirmation/", async (req, res) => {
     try {
-        const {
-            user: { userId },
-        } = jwt.verify(req.query["token"], process.env.ACCESS_TOKEN_SECRET);
-        const result = await db.users.confirmUser(userId);
+        const { user } = jwt.verify(
+            req.query["token"],
+            process.env.ACCESS_TOKEN_SECRET
+        );
+
+        const result = await db.users.confirmUser(user);
     } catch (e) {
         res.sendStatus(500);
     }
 
-    res.redirect(`${process.env.STAFFSHARE_HOST}/login`);
+    res.redirect(`${process.env.STAFFSHARE_TESTHOST}/login`);
 });
 
 router.post("/send-confirmation", async (req, res) => {
-    const { userId } = req.body;
+    const { userId, email } = req.body;
+    console.log(req.body);
     try {
         jwt.sign(
             { user: userId },
             process.env.ACCESS_TOKEN_SECRET,
             { expiresIn: "1d" },
             (err, emailToken) => {
-                const url = `http://localhost:${
-                    process.env.HOST || 3000
-                }/staffshare/api/confirmation/?token=${emailToken}`;
+                const url = `${process.env.STAFFSHARE_LOCAL}:${process.env.PORT}/staffshare/api/confirmation/?token=${emailToken}`;
                 if (err) console.log(err);
                 transporter.sendMail(
                     {
                         from: process.env.SERVER_EMAIL,
-                        to: data.email,
+                        to: email,
                         subject: "StaffShare - Activate account",
                         html: `
                         <div style="display:flex;flex-direction: column; align-items: center; justify-content: center">
                             <h1>Welcome to StaffShare</h1>
-                            <div><a style="text-decoration: none; color: #fff; background: #339989; padding: 0.5rem 1.5rem" href="${url}">Activate account</a>
+                            <div><a style="text-decoration: none;border-radius: 5px; color: #fff; background: #339989; padding: 0.5rem 1.5rem" href="${url}">Activate account</a>
                             </div>
     
                         </div>
                     `,
                     },
                     (err) => {
-                        console.log(userId);
                         if (err) console.log(err);
                         else console.log("Mail sent!");
                     }
@@ -316,16 +316,14 @@ router.post("/send-confirmation", async (req, res) => {
 router.post("/register", async (req, res) => {
     let data = req.body;
     try {
-        let { userId } = await db.users.register(data);
+        let { userId, email } = await db.users.register(data);
 
         jwt.sign(
             { user: userId },
             process.env.ACCESS_TOKEN_SECRET,
             { expiresIn: "1d" },
             (err, emailToken) => {
-                const url = `http://localhost:${
-                    process.env.HOST || 3000
-                }/staffshare/api/confirmation/?token=${emailToken}`;
+                const url = `${process.env.STAFFSHARE_LOCAL}:${process.env.PORT}/staffshare/api/confirmation/?token=${emailToken}`;
                 if (err) console.log(err);
                 transporter.sendMail(
                     {
@@ -335,7 +333,7 @@ router.post("/register", async (req, res) => {
                         html: `
                         <div style="display:flex;flex-direction: column; align-items: center; justify-content: center">
                             <h1>Welcome to StaffShare</h1>
-                            <div><a style="text-decoration: none; color: #fff; background: #339989; padding: 0.5rem 1.5rem" href="${url}">Activate account</a>
+                            <div><a style="text-decoration: none;border-radius:5px; color: #fff; background: #339989; padding: 0.5rem 1.5rem" href="${url}">Activate account</a>
                             </div>
 
                         </div>
@@ -349,7 +347,10 @@ router.post("/register", async (req, res) => {
             }
         );
 
-        res.json(userId);
+        res.json({
+            userId,
+            email,
+        });
     } catch (e) {
         res.status(203).send(e);
     }

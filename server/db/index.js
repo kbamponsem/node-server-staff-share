@@ -420,7 +420,7 @@ staffsharedb.users.register = (user) => {
                     if (err) {
                         return reject({ error: err.code });
                     }
-                    return resolve({ userId });
+                    return resolve({ userId, email: user.email });
                 }
             );
         });
@@ -430,7 +430,7 @@ staffsharedb.users.register = (user) => {
 staffsharedb.users.login = ({ username, password }) => {
     return new Promise((resolve, reject) => {
         pool.query(
-            `SELECT id,name,password FROM user WHERE username=? OR email=? AND confirmed=1`,
+            `SELECT id,name,password,confirmed FROM user WHERE username=? OR email=?`,
             [username, username],
             (err, result) => {
                 if (err) {
@@ -439,7 +439,7 @@ staffsharedb.users.login = ({ username, password }) => {
                 if (result.length > 0) {
                     if (bcrypt.compareSync(password, result[0].password)) {
                         return resolve({
-                            loggedIn: true,
+                            loggedIn: result[0].confirmed === 1,
                             name: result[0].name,
                             userId: result[0].id,
                         });
