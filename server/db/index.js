@@ -388,14 +388,28 @@ staffsharedb.sheets.updateSheet = (sheetId, sheet) => {
     });
 };
 
+staffsharedb.users.confirmUser = (userId) => {
+    return new Promise((resolve, reject) => {
+        pool.query(
+            `UPDATE user SET confirmed=1 WHERE id=?`,
+            [userId],
+            (err, res) => {
+                if (err) return reject(err);
+                return resolve(res);
+            }
+        );
+    });
+};
+
 staffsharedb.users.register = (user) => {
     return new Promise((resolve, reject) => {
         let userId = uuidv4();
         bcrypt.hash(user.password, 10, (err, hash) => {
             pool.query(
-                `INSERT INTO user VALUES (?,?,?,?,?,?)`,
+                `INSERT INTO user VALUES (?,?,?,?,?,?,?)`,
                 [
                     userId,
+                    0,
                     user.name,
                     user.email,
                     user.authProvider,
@@ -406,7 +420,7 @@ staffsharedb.users.register = (user) => {
                     if (err) {
                         return reject({ error: err.code });
                     }
-                    return resolve(result);
+                    return resolve({ userId, email: user.email });
                 }
             );
         });
@@ -416,7 +430,7 @@ staffsharedb.users.register = (user) => {
 staffsharedb.users.login = ({ username, password }) => {
     return new Promise((resolve, reject) => {
         pool.query(
-            `SELECT id,name,password FROM user WHERE username=? OR email=?`,
+            `SELECT id,name,password,confirmed FROM user WHERE username=? OR email=?`,
             [username, username],
             (err, result) => {
                 if (err) {
@@ -425,7 +439,7 @@ staffsharedb.users.login = ({ username, password }) => {
                 if (result.length > 0) {
                     if (bcrypt.compareSync(password, result[0].password)) {
                         return resolve({
-                            loggedIn: true,
+                            loggedIn: result[0].confirmed === 1,
                             name: result[0].name,
                             userId: result[0].id,
                         });
