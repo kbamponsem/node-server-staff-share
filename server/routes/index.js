@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const main = require("./mailer");
 const nodemailer = require("nodemailer");
 const router = express.Router();
-
+const emailConfirmation = require("./emailStrings");
 let transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 465,
@@ -276,7 +276,7 @@ router.get("/confirmation/", async (req, res) => {
 });
 
 router.post("/send-confirmation", async (req, res) => {
-    const { userId, email } = req.body;
+    const { userId, email, username } = req.body;
     console.log(req.body);
     try {
         jwt.sign(
@@ -291,14 +291,7 @@ router.post("/send-confirmation", async (req, res) => {
                         from: process.env.SERVER_EMAIL,
                         to: email,
                         subject: "StaffShare - Activate account",
-                        html: `
-                        <div style="display:flex;flex-direction: column; align-items: center; justify-content: center">
-                            <h1>Welcome to StaffShare</h1>
-                            <div><a style="text-decoration: none;border-radius: 5px; color: #fff; background: #339989; padding: 0.5rem 1.5rem" href="${url}">Activate account</a>
-                            </div>
-    
-                        </div>
-                    `,
+                        html: emailConfirmation(url, username),
                     },
                     (err) => {
                         if (err) console.log(err);
@@ -316,28 +309,21 @@ router.post("/send-confirmation", async (req, res) => {
 router.post("/register", async (req, res) => {
     let data = req.body;
     try {
-        let { userId, email } = await db.users.register(data);
+        let { userId, email, username } = await db.users.register(data);
 
         jwt.sign(
             { user: userId },
             process.env.ACCESS_TOKEN_SECRET,
             { expiresIn: "1d" },
             (err, emailToken) => {
-                const url = `${process.env.STAFFSHARE_LOCAL}:${process.env.PORT}/staffshare/api/confirmation/?token=${emailToken}`;
+                const url = `${process.env.STAFFSHARE_SERVER}/staffshare/api/confirmation/?token=${emailToken}`;
                 if (err) console.log(err);
                 transporter.sendMail(
                     {
                         from: process.env.SERVER_EMAIL,
                         to: data.email,
                         subject: "StaffShare - Activate account",
-                        html: `
-                        <div style="display:flex;flex-direction: column; align-items: center; justify-content: center">
-                            <h1>Welcome to StaffShare</h1>
-                            <div><a style="text-decoration: none;border-radius:5px; color: #fff; background: #339989; padding: 0.5rem 1.5rem" href="${url}">Activate account</a>
-                            </div>
-
-                        </div>
-                    `,
+                        html: emailConfirmation(url, username),
                     },
                     (err) => {
                         if (err) console.log(err);
@@ -350,6 +336,7 @@ router.post("/register", async (req, res) => {
         res.json({
             userId,
             email,
+            username,
         });
     } catch (e) {
         res.status(203).send(e);
@@ -361,7 +348,7 @@ router.post("/login", async (req, res) => {
         const user = req.body;
         const results = await db.users.login(user);
 
-        const { loggedIn, name, userId } = results;
+        const { loggedIn, name, userId, username } = results;
         let accessToken;
         if (loggedIn) {
             accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
@@ -370,6 +357,7 @@ router.post("/login", async (req, res) => {
                 accessToken,
                 name,
                 userId,
+                username,
             });
         } else {
             res.status(201).send({ message: "User not found" });

@@ -420,7 +420,11 @@ staffsharedb.users.register = (user) => {
                     if (err) {
                         return reject({ error: err.code });
                     }
-                    return resolve({ userId, email: user.email });
+                    return resolve({
+                        userId,
+                        email: user.email,
+                        username: user.username,
+                    });
                 }
             );
         });
@@ -442,6 +446,7 @@ staffsharedb.users.login = ({ username, password }) => {
                             loggedIn: result[0].confirmed === 1,
                             name: result[0].name,
                             userId: result[0].id,
+                            username: result[0].username,
                         });
                     }
                 }
