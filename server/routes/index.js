@@ -272,7 +272,7 @@ router.get("/confirmation/", async (req, res) => {
         res.sendStatus(500);
     }
 
-    res.redirect(`${process.env.STAFFSHARE_TESTHOST}/login`);
+    res.redirect(`${process.env.STAFFSHARE_PRODHOST}/login`);
 });
 
 router.post("/send-confirmation", async (req, res) => {
