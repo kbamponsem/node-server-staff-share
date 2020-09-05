@@ -434,7 +434,7 @@ staffsharedb.users.register = (user) => {
 staffsharedb.users.login = ({ username, password }) => {
     return new Promise((resolve, reject) => {
         pool.query(
-            `SELECT id,name,password,confirmed FROM user WHERE username=? OR email=?`,
+            `SELECT id,name,password,username,confirmed FROM user WHERE username=? OR email=?`,
             [username, username],
             (err, result) => {
                 if (err) {
@@ -450,7 +450,12 @@ staffsharedb.users.login = ({ username, password }) => {
                         });
                     }
                 }
-                return resolve({ loggedIn: false, name: "", userId: "" });
+                return resolve({
+                    loggedIn: false,
+                    name: "",
+                    userId: "",
+                    username: "",
+                });
             }
         );
     });
