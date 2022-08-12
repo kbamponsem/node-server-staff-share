@@ -6,11 +6,13 @@
     "scripts": {
         "dev": "npx nodemon server/server.js -w server",
         "start": "node server/server.js",
-        "deploy": "make deploy-main"
+        "deploy": "make deploy-main",
+        "migrate": "node-pg-migrate"
     },
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "@mysql/xdevapi": "^8.0.30",
         "bcrypt": "^5.0.0",
         "body-parser": "^1.19.0",
         "cors": "^2.8.5",
@@ -20,9 +22,10 @@
         "jsonwebtoken": "^8.5.1",
         "merge-descriptors": "^1.0.1",
         "mysql": "^2.18.1",
+        "node-pg-migrate": "^6.2.2",
         "nodemailer": "^6.4.11",
         "nodemon": "^2.0.4",
-        "pg": "^8.2.1",
+        "pg": "^8.7.3",
         "uuid": "^8.1.0"
     }
 }

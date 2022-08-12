@@ -5,13 +5,15 @@ const fs = require("fs");
 const os = require("os");
 const { v4: uuidv4 } = require("uuid");
 const { resolve } = require("path");
+const Buffer = require('node:buffer');
+
 
 const pool = mysql.createPool({
     database: process.env.MYSQL_DATABASE,
-    password: process.env.MYSQL_ROOT_PASSWORD,
-    user: process.env.USER,
+    password: process.env.MYSQL_USER_PASSWORD,
+    user: process.env.MYSQL_USER,
     host: process.env.MYSQL_HOST,
-    port: "3306",
+    port: process.env.MYSQL_PORT,
 });
 
 let staffsharedb = {
@@ -409,15 +411,16 @@ staffsharedb.users.register = (user) => {
                 `INSERT INTO user VALUES (?,?,?,?,?,?,?)`,
                 [
                     userId,
-                    0,
-                    user.name,
-                    user.email,
-                    user.authProvider,
-                    hash,
                     user.username,
+                    user.name,
+                    hash,
+                    user.email,
+                    0,
+                    user.authProvider,
                 ],
                 (err, result) => {
                     if (err) {
+                        console.log(err)
                         return reject({ error: err.code });
                     }
                     return resolve({
@@ -434,16 +437,19 @@ staffsharedb.users.register = (user) => {
 staffsharedb.users.login = ({ username, password }) => {
     return new Promise((resolve, reject) => {
         pool.query(
-            `SELECT id,name,password,username,confirmed FROM user WHERE username=? OR email=?`,
+            `SELECT id,name,password,username,validated FROM user WHERE username=? OR email=?`,
             [username, username],
             (err, result) => {
+                console.log(result)
                 if (err) {
+                    console.log(err)
                     return reject({ error: err.code });
                 }
                 if (result.length > 0) {
+                    let loggedIn = result[0].validated.values().next().value == 1;
                     if (bcrypt.compareSync(password, result[0].password)) {
                         return resolve({
-                            loggedIn: result[0].confirmed === 1,
+                            loggedIn,
                             name: result[0].name,
                             userId: result[0].id,
                             username: result[0].username,

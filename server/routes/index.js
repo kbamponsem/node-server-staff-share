@@ -7,8 +7,8 @@ const nodemailer = require("nodemailer");
 const router = express.Router();
 const emailConfirmation = require("./emailStrings");
 let transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
+    host: "noreply.example.com",
+    port: 587,
     secure: true,
     auth: {
         user: "serverstaffshare@gmail.com",

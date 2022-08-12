@@ -20,7 +20,17 @@ services:
             - LETSENCRYPT_HOST=server.staffshare.co
             - LETSENCRYPT_EMAIL=kbamponsem@yahoo.com
 
-networks:
-    default:
-        external:
-            name: nginx-proxy
+    mysql:
+        container_name: mysql
+        image: 'mysql:latest'
+        env_file: .env
+        environment:
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+        volumes:
+            - my-datavolume:/var/lib/mysql
+            - ./sql-setup/init.sql:/docker-entrypoint-initdb.d/1.sql
+        ports:
+            - "3306:3306"
+
+volumes:
+    my-datavolume:
